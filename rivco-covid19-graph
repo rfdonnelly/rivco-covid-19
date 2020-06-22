@@ -1,0 +1,112 @@
+#!/usr/bin/env python3
+
+import datetime
+import json
+import urllib.request
+
+import pandas as pd
+import matplotlib
+matplotlib.use('agg')
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+import matplotlib.ticker as ticker
+
+def fetch_json(url):
+    with urllib.request.urlopen(url) as response:
+        return json.load(response)
+
+def feature2row(feature):
+    attributes = feature['attributes']
+    date = datetime.datetime.utcfromtimestamp(attributes['DateReported'] / 1000)
+    return [date, attributes['ReportedNewCases']]
+
+def json2data(json):
+    data = list(map(feature2row, json['features']))
+    while data[0][1] == 0:
+        del data[0]
+    return data
+
+def data2dataframe(data):
+    df = pd.DataFrame.from_records(data, columns = ['Date', 'New Cases'])
+    df.index = pd.to_datetime(df.pop('Date')).dt.date
+    df['7-day Average'] = df.rolling(window=7).mean()
+    return df
+
+def simple_plot(df, last_updated):
+    title = 'Riverside County\nCOVID-19 New Cases\nUp to ' + last_updated
+    df.plot(title=title).get_figure().savefig('figure.png')
+
+def plot_events(ax):
+    events = [
+        {
+            'date': '2020-03-19',
+            'name': 'CA Stay-at-Home Order',
+            'level': 150,
+        }, {
+            'date': '2020-04-04',
+            'name': 'RivCo Mask Order',
+            'level': 210,
+        }, {
+            'date': '2020-05-01',
+            'name': 'Stay-at-Home Protests',
+            'level': 270,
+        }, {
+            'date': '2020-05-09',
+            'name': 'RivCo Recinds Mask Order',
+            'level': 330,
+        }, {
+            'date': '2020-05-22',
+            'name': 'RivCo Enters Accelerated Stage 2 Reopening',
+            'level': 390,
+        }, {
+            'date': '2020-05-25',
+            'name': 'Memorial Day',
+            'level': 450,
+        }, {
+            'date': '2020-06-01',
+            'name': 'George Floyd Protests',
+            'level': 510,
+        }, {
+            'date': '2020-06-18',
+            'name': 'CA Mask Order',
+            'level': 570,
+        }
+    ]
+
+    dates = list(map(lambda event: datetime.datetime.strptime(event['date'], "%Y-%m-%d"), events))
+    levels = list(map(lambda event: event['level'], events))
+    markerline, stemline, baseline = ax.stem(dates, levels, linefmt='grey', markerfmt=',')
+    for line in stemline:
+        line.linewidth = 0.1
+
+    for event in events:
+        date = datetime.datetime.strptime(event['date'], "%Y-%m-%d")
+        ax.annotate(event['name'], xy=(date, event['level']), horizontalalignment='right')
+
+def advanced_plot(df, last_updated):
+    fig, ax = plt.subplots()
+    plt.setp(ax.get_xticklabels(), rotation=30, ha="right")
+    title = 'Riverside County\nCOVID-19 New Cases\nUp to ' + last_updated
+    plt.title(title)
+    ax.bar(df.index, df['New Cases'], label='New Cases per Day')
+    ax.plot(df.index, df['7-day Average'], label='7-day Average', color='Red')
+    plot_events(ax)
+    # ax.set_xticklabels(df.index)
+    ax.legend(loc='upper left')
+    plt.ylim(0, 600)
+    plt.xlim(min(df.index), max(df.index) + datetime.timedelta(days=1))
+    locator = ticker.MaxNLocator(nbins=15)
+    ax.xaxis.set_major_locator(locator)
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+    plt.tight_layout()
+    fig.set_size_inches(11, 8)
+    fig.savefig('figure.png')
+
+url = 'https://services1.arcgis.com/pWmBUdSlVpXStHU6/arcgis/rest/services/COVID19_Cases_DateReport/FeatureServer/0/query?f=json&where=1%3D1&returnGeometry=false&spatialRel=esriSpatialRelIntersects&outFields=*&orderByFields=DateReported%20asc&resultOffset=0&resultRecordCount=32000&resultType=standard&cacheHint=true'
+json = fetch_json(url)
+data = json2data(json)
+df = data2dataframe(data)
+last_updated = max(df.index).strftime("%Y-%m-%d")
+print('Last updated: ' + last_updated)
+# simple_plot(df, last_updated)
+advanced_plot(df, last_updated)
