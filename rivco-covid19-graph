@@ -42,47 +42,42 @@ def plot_events(ax):
         {
             'date': '2020-03-19',
             'name': 'CA Stay-at-Home Order',
-            'level': 150,
         }, {
             'date': '2020-04-04',
             'name': 'RivCo Mask Order',
-            'level': 210,
         }, {
             'date': '2020-05-01',
             'name': 'Stay-at-Home Protests',
-            'level': 270,
         }, {
             'date': '2020-05-09',
             'name': 'RivCo Recinds Mask Order',
-            'level': 330,
         }, {
             'date': '2020-05-22',
             'name': 'RivCo Enters Accelerated Stage 2 Reopening',
-            'level': 390,
         }, {
             'date': '2020-05-25',
             'name': 'Memorial Day',
-            'level': 450,
         }, {
             'date': '2020-06-01',
             'name': 'George Floyd Protests',
-            'level': 510,
         }, {
             'date': '2020-06-18',
             'name': 'CA Mask Order',
-            'level': 570,
         }
     ]
 
     dates = list(map(lambda event: datetime.datetime.strptime(event['date'], "%Y-%m-%d"), events))
-    levels = list(map(lambda event: event['level'], events))
+    level_min = 150
+    level_increment = 60
+    level_max = level_min + level_increment * len(events)
+    levels = list(range(level_min, level_max, level_increment))
     markerline, stemline, baseline = ax.stem(dates, levels, linefmt='grey', markerfmt=',')
     for line in stemline:
         line.linewidth = 0.1
 
-    for event in events:
+    for (event, level) in zip(events, levels):
         date = datetime.datetime.strptime(event['date'], "%Y-%m-%d")
-        ax.annotate(event['name'], xy=(date, event['level']), horizontalalignment='right')
+        ax.annotate(event['name'], xy=(date, level), horizontalalignment='right')
 
 def advanced_plot(df, last_updated):
     fig, ax = plt.subplots()
