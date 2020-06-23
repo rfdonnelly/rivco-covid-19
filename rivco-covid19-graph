@@ -84,6 +84,10 @@ def advanced_plot(df, last_updated):
     plt.setp(ax.get_xticklabels(), rotation=30, ha="right")
     title = 'Riverside County\nCOVID-19 New Cases\nUp to ' + last_updated
     plt.title(title)
+
+    ax.set_axisbelow(True)
+    ax.yaxis.grid(color='0.9', linestyle='dashed')
+
     ax.bar(df.index, df['New Cases'], label='New Cases per Day')
     ax.plot(df.index, df['7-day Average'], label='7-day Average', color='Red')
     plot_events(ax)
