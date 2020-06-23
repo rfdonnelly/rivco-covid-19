@@ -2,6 +2,7 @@
 
 import datetime
 import json
+import math
 import urllib.request
 
 import pandas as pd
@@ -91,14 +92,22 @@ def advanced_plot(df, last_updated):
     ax.bar(df.index, df['New Cases'], label='New Cases per Day')
     ax.plot(df.index, df['7-day Average'], label='7-day Average', color='Red')
     plot_events(ax)
-    # ax.set_xticklabels(df.index)
+
     ax.legend(loc='upper left')
     plt.ylim(0, 600)
-    plt.xlim(min(df.index), max(df.index) + datetime.timedelta(days=1))
-    locator = ticker.MaxNLocator(nbins=15)
+
+    date_min = min(df.index)
+    date_max = max(df.index)
+    # Add 1 day for some whitespace between the last day and the border
+    plt.xlim(date_min, date_max + datetime.timedelta(days=1))
+
+    # Major tick every 5 days
+    nbins = math.ceil((date_max - date_min).days / 5)
+    locator = ticker.MaxNLocator(nbins=nbins)
     ax.xaxis.set_major_locator(locator)
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
     plt.tight_layout()
+
     fig.set_size_inches(11, 8)
     fig.savefig('figure.png')
 
