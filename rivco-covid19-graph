@@ -100,8 +100,8 @@ def advanced_plot(df, last_updated):
     # Add 1 day for some whitespace between the last day and the border
     plt.xlim(date_min, date_max + datetime.timedelta(days=1))
 
-    # Major tick every 5 days
-    nbins = math.ceil((date_max - date_min).days / 5)
+    # Major tick every N days
+    nbins = math.ceil((date_max - date_min).days / 7)
     locator = ticker.MaxNLocator(nbins=nbins)
     ax.xaxis.set_major_locator(locator)
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
