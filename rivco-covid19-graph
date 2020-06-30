@@ -79,6 +79,8 @@ def plot_events(ax):
         date = datetime.datetime.strptime(event['date'], "%Y-%m-%d")
         ax.annotate(event['name'], xy=(date, level), horizontalalignment='right')
 
+    return max(levels)
+
 def advanced_plot(df, last_updated):
     fig, ax = plt.subplots()
     plt.setp(ax.get_xticklabels(), rotation=30, ha="right")
@@ -90,10 +92,11 @@ def advanced_plot(df, last_updated):
 
     ax.bar(df.index, df['New Cases'], label='New Cases per Day')
     ax.plot(df.index, df['7-day Average'], label='7-day Average', color='Red')
-    plot_events(ax)
+    max_level = plot_events(ax)
 
     ax.legend(loc='upper left')
-    plt.ylim(0, max(df['New Cases']) + 50)
+    max_y = max([max(df['New Cases']), max_level]) + 50
+    plt.ylim(0, max_y)
 
     date_min = min(df.index)
     date_max = max(df.index)
