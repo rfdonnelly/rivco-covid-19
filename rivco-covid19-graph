@@ -22,7 +22,7 @@ def feature2row(feature):
     return [date, attributes['ReportedNewCases']]
 
 def json2data(json):
-    data = list(map(feature2row, json['features']))
+    data = [feature2row(feature) for feature in json['features']]
     while data[0][1] == 0:
         del data[0]
     return data
@@ -72,7 +72,7 @@ def plot_events(ax):
         }
     ]
 
-    dates = list(map(lambda event: datetime.datetime.strptime(event['date'], "%Y-%m-%d"), events))
+    dates = [datetime.datetime.strptime(event['date'], "%Y-%m-%d") for event in events]
     level_min = 150
     level_increment = 70
     level_max = level_min + level_increment * len(events)
