@@ -16,13 +16,13 @@ def fetch_json(url):
     with urllib.request.urlopen(url) as response:
         return json.load(response)
 
-def feature2row(feature):
+def feature2row(feature, field):
     attributes = feature['attributes']
     date = datetime.datetime.utcfromtimestamp(attributes['DateReported'] / 1000)
-    return [date, attributes['ReportedNewCases']]
+    return [date, attributes[field]]
 
-def json2data(json):
-    data = [feature2row(feature) for feature in json['features']]
+def json2data(json, field):
+    data = [feature2row(feature, field) for feature in json['features']]
     while data[0][1] == 0:
         del data[0]
     return data
@@ -87,7 +87,7 @@ def plot_events(ax):
 
     return max(levels)
 
-def advanced_plot(df, last_updated):
+def advanced_plot(df, last_updated, filename):
     fig, ax = plt.subplots()
     plt.setp(ax.get_xticklabels(), rotation=30, ha="right")
     title = 'Riverside County\nCOVID-19 New Cases\nUp to ' + last_updated
@@ -117,13 +117,18 @@ def advanced_plot(df, last_updated):
     plt.tight_layout()
 
     fig.set_size_inches(11, 8)
-    fig.savefig('figure.png')
+    fig.savefig(filename)
 
-url = 'https://services1.arcgis.com/pWmBUdSlVpXStHU6/arcgis/rest/services/COVID19_Cases_DateReport/FeatureServer/0/query?f=json&where=1%3D1&returnGeometry=false&spatialRel=esriSpatialRelIntersects&outFields=*&orderByFields=DateReported%20asc&resultOffset=0&resultRecordCount=32000&resultType=standard&cacheHint=true'
-json = fetch_json(url)
-data = json2data(json)
-df = data2dataframe(data)
-last_updated = max(df.index).strftime("%Y-%m-%d")
-print('Last updated: ' + last_updated)
-# simple_plot(df, last_updated)
-advanced_plot(df, last_updated)
+def plot_cases():
+    filename = 'cases.png'
+    field = 'ReportedNewCases'
+    url = 'https://services1.arcgis.com/pWmBUdSlVpXStHU6/arcgis/rest/services/COVID19_Cases_DateReport/FeatureServer/0/query?f=json&where=1%3D1&returnGeometry=false&spatialRel=esriSpatialRelIntersects&outFields=*&orderByFields=DateReported%20asc&resultOffset=0&resultRecordCount=32000&resultType=standard&cacheHint=true'
+    json = fetch_json(url)
+    data = json2data(json, field)
+    df = data2dataframe(data)
+    last_updated = max(df.index).strftime("%Y-%m-%d")
+    print('Last updated: ' + last_updated)
+    # simple_plot(df, last_updated)
+    advanced_plot(df, last_updated, filename)
+
+plot_cases()
