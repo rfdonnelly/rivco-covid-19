@@ -87,7 +87,7 @@ def plot_events(ax):
 
     return max(levels)
 
-def advanced_plot(df, last_updated, filename, label, show_events):
+def advanced_plot(df, date_min, last_updated, filename, label, show_events):
     fig, ax = plt.subplots()
     plt.setp(ax.get_xticklabels(), rotation=30, ha="right")
     title = 'Riverside County\nCOVID-19 {label}\nUp to {last_updated}'.format(label=label, last_updated=last_updated)
@@ -112,7 +112,6 @@ def advanced_plot(df, last_updated, filename, label, show_events):
     max_y = max([max(df[label]), max_level]) * 1.05
     plt.ylim(0, max_y)
 
-    date_min = min(df.index)
     date_max = max(df.index)
     # Add 1 day for some whitespace between the last day and the border
     plt.xlim(date_min, date_max + datetime.timedelta(days=1))
@@ -135,12 +134,14 @@ def plot_cases():
     json = fetch_json(url)
     data = json2data(json, field)
     df = data2dataframe(data, label)
+    date_min = min(df.index)
     last_updated = max(df.index).strftime("%Y-%m-%d")
     print('Last updated: ' + last_updated)
     # simple_plot(df, last_updated)
-    advanced_plot(df, last_updated, filename, label, True)
+    advanced_plot(df, date_min, last_updated, filename, label, True)
+    return date_min
 
-def plot_deaths():
+def plot_deaths(date_min):
     filename = 'deaths.png'
     field = 'ReportedNewDeaths'
     label = 'Deaths'
@@ -151,7 +152,7 @@ def plot_deaths():
     last_updated = max(df.index).strftime("%Y-%m-%d")
     print('Last updated: ' + last_updated)
     # simple_plot(df, last_updated)
-    advanced_plot(df, last_updated, filename, label, False)
+    advanced_plot(df, date_min, last_updated, filename, label, False)
 
-plot_cases()
-plot_deaths()
+date_min = plot_cases()
+plot_deaths(date_min)
