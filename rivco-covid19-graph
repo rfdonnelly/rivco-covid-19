@@ -27,8 +27,8 @@ def json2data(json, field):
         del data[0]
     return data
 
-def data2dataframe(data):
-    df = pd.DataFrame.from_records(data, columns = ['Date', 'New Cases'])
+def data2dataframe(data, label):
+    df = pd.DataFrame.from_records(data, columns = ['Date', label])
     df.index = pd.to_datetime(df.pop('Date')).dt.date
     df['7-day Average'] = df.rolling(window=7).mean()
     return df
@@ -87,21 +87,29 @@ def plot_events(ax):
 
     return max(levels)
 
-def advanced_plot(df, last_updated, filename):
+def advanced_plot(df, last_updated, filename, label, show_events):
     fig, ax = plt.subplots()
     plt.setp(ax.get_xticklabels(), rotation=30, ha="right")
-    title = 'Riverside County\nCOVID-19 New Cases\nUp to ' + last_updated
+    title = 'Riverside County\nCOVID-19 {label}\nUp to {last_updated}'.format(label=label, last_updated=last_updated)
     plt.title(title)
 
     ax.set_axisbelow(True)
     ax.yaxis.grid(color='0.9', linestyle='dashed')
 
-    ax.bar(df.index, df['New Cases'], label='New Cases per Day')
+    color_map = {
+        'New Cases': 'C0',
+        'Deaths': 'C7',
+    }
+
+    ax.bar(df.index, df[label], label='{label} per Day'.format(label=label), color=color_map[label])
     ax.plot(df.index, df['7-day Average'], label='7-day Average', color='Red')
-    max_level = plot_events(ax)
+    if show_events:
+        max_level = plot_events(ax)
+    else:
+        max_level = 0
 
     ax.legend(loc='upper left')
-    max_y = max([max(df['New Cases']), max_level]) + 50
+    max_y = max([max(df[label]), max_level]) * 1.05
     plt.ylim(0, max_y)
 
     date_min = min(df.index)
@@ -122,13 +130,28 @@ def advanced_plot(df, last_updated, filename):
 def plot_cases():
     filename = 'cases.png'
     field = 'ReportedNewCases'
+    label = 'New Cases'
     url = 'https://services1.arcgis.com/pWmBUdSlVpXStHU6/arcgis/rest/services/COVID19_Cases_DateReport/FeatureServer/0/query?f=json&where=1%3D1&returnGeometry=false&spatialRel=esriSpatialRelIntersects&outFields=*&orderByFields=DateReported%20asc&resultOffset=0&resultRecordCount=32000&resultType=standard&cacheHint=true'
     json = fetch_json(url)
     data = json2data(json, field)
-    df = data2dataframe(data)
+    df = data2dataframe(data, label)
     last_updated = max(df.index).strftime("%Y-%m-%d")
     print('Last updated: ' + last_updated)
     # simple_plot(df, last_updated)
-    advanced_plot(df, last_updated, filename)
+    advanced_plot(df, last_updated, filename, label, True)
+
+def plot_deaths():
+    filename = 'deaths.png'
+    field = 'ReportedNewDeaths'
+    label = 'Deaths'
+    url = 'https://services1.arcgis.com/pWmBUdSlVpXStHU6/arcgis/rest/services/COVID19_Deaths_DateReport/FeatureServer/0/query?f=json&where=1%3D1&returnGeometry=false&spatialRel=esriSpatialRelIntersects&outFields=*&orderByFields=DateReported%20asc&resultOffset=0&resultRecordCount=32000&resultType=standard&cacheHint=true'
+    json = fetch_json(url)
+    data = json2data(json, field)
+    df = data2dataframe(data, label)
+    last_updated = max(df.index).strftime("%Y-%m-%d")
+    print('Last updated: ' + last_updated)
+    # simple_plot(df, last_updated)
+    advanced_plot(df, last_updated, filename, label, False)
 
 plot_cases()
+plot_deaths()
