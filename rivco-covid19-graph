@@ -68,7 +68,10 @@ def plot_events(ax):
             'name': 'RivCo Bars Closure',
         }, {
             'date': '2020-07-01',
-            'name': 'CA Indoor Closure',
+            'name': 'CA Indoor Closure I',
+        }, {
+            'date': '2020-07-13',
+            'name': 'CA Indoor Closure II',
         }
     ]
 
