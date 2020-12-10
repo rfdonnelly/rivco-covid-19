@@ -80,9 +80,9 @@ def plot_events(ax):
     level_increment = 70
     level_max = level_min + level_increment * len(events)
     levels = list(range(level_min, level_max, level_increment))
-    markerline, stemline, baseline = ax.stem(dates, levels, linefmt='grey', markerfmt=',')
-    for line in stemline:
-        line.linewidth = 0.1
+    stem_result = ax.stem(dates, levels, linefmt='grey', markerfmt=',')
+    for linewidth in stem_result.stemlines.get_linewidths():
+        linewidth = 0.1
 
     for (event, level) in zip(events, levels):
         date = datetime.datetime.strptime(event['date'], "%Y-%m-%d")
